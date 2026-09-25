@@ -8,14 +8,11 @@ import { api, ApiError } from "@/lib/client-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorBanner } from "@/components/app-shell";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<"shipper" | "receiver">("shipper");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [nickname, setNickname] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,13 +23,12 @@ export default function LoginPage() {
     try {
       const data = await api<{ user: { role: string } }>("/api/auth", {
         method: "POST",
-        body: JSON.stringify({ mode: "login", role, username, password }),
+        body: JSON.stringify({ mode: "login", nickname }),
       });
       toast.success("登录成功");
       router.replace(data.user.role === "shipper" ? "/shipper" : "/receiver");
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "登录失败";
-      setError(msg);
+      setError(err instanceof ApiError ? err.message : "登录失败");
     } finally {
       setBusy(false);
     }
@@ -44,45 +40,23 @@ export default function LoginPage() {
         <Link href="/" className="font-display text-2xl font-semibold text-ink">
           排发助手
         </Link>
-        <p className="mt-2 text-sm text-muted-foreground">登录后继续管理库存或提交排发登记。</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          输入昵称即可登录。发货方使用预设昵称（默认{" "}
+          <span className="font-medium text-foreground">shipper</span>
+          ），收货方使用自己注册的昵称。
+        </p>
 
-        <Tabs
-          value={role}
-          onValueChange={(v) => setRole(v as "shipper" | "receiver")}
-          className="mt-6"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="shipper">发货方</TabsTrigger>
-            <TabsTrigger value="receiver">收货方</TabsTrigger>
-          </TabsList>
-          <TabsContent value="shipper" className="mt-4 text-sm text-muted-foreground">
-            使用预设发货方账号登录（默认见 README）。
-          </TabsContent>
-          <TabsContent value="receiver" className="mt-4 text-sm text-muted-foreground">
-            使用已注册的收货方用户名登录。
-          </TabsContent>
-        </Tabs>
-
-        <form onSubmit={onSubmit} className="mt-4 space-y-4">
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
           {error && <ErrorBanner message={error} />}
           <div className="space-y-2">
-            <Label htmlFor="username">用户名</Label>
+            <Label htmlFor="nickname">昵称</Label>
             <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">密码</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              id="nickname"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="例如：shipper 或 小明"
+              autoComplete="nickname"
+              autoFocus
               required
             />
           </div>
@@ -92,7 +66,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          还没有收货方账号？{" "}
+          还没有收货方昵称？{" "}
           <Link href="/register" className="font-medium text-sea hover:underline">
             去注册
           </Link>

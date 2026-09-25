@@ -4,9 +4,10 @@ export type RequestStatus = "pending" | "cleared";
 
 export interface ReceiverUser {
   id: string;
+  /** Login nickname (昵称) */
   username: string;
+  /** Display name — same as nickname for new accounts */
   cn: string;
-  passwordHash: string;
   createdAt: string;
 }
 

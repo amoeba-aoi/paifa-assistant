@@ -29,7 +29,12 @@ export async function readStore(): Promise<StoreData> {
   try {
     const parsed = JSON.parse(raw) as StoreData;
     return {
-      receivers: parsed.receivers ?? [],
+      receivers: (parsed.receivers ?? []).map((r) => ({
+        id: r.id,
+        username: r.username,
+        cn: r.cn,
+        createdAt: r.createdAt,
+      })),
       modules: parsed.modules ?? [],
       inventory: parsed.inventory ?? [],
       requests: parsed.requests ?? [],

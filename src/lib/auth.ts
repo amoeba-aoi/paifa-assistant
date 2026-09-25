@@ -1,16 +1,20 @@
-import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { createHmac, timingSafeEqual } from "crypto";
 import type { Role, SessionUser } from "./types";
 
 const SESSION_COOKIE = "paifa_session";
 
-export function getShipperCredentials() {
-  return {
-    username: process.env.SHIPPER_USERNAME || "shipper",
-    password: process.env.SHIPPER_PASSWORD || "shipper123",
-    cn: process.env.SHIPPER_CN || "发货方",
-  };
+/** Known 发货方 nicknames (no password). */
+export function getShipperIdentity() {
+  const nickname = (process.env.SHIPPER_NICKNAME || process.env.SHIPPER_USERNAME || "shipper").trim();
+  const cn = (process.env.SHIPPER_CN || "发货方").trim();
+  return { nickname, cn };
+}
+
+export function isShipperNickname(nickname: string): boolean {
+  const { nickname: shipperNick, cn } = getShipperIdentity();
+  const n = nickname.trim().toLowerCase();
+  return n === shipperNick.toLowerCase() || n === cn.toLowerCase();
 }
 
 function sessionSecret() {
@@ -39,14 +43,6 @@ export function decodeSession(token: string | undefined | null): SessionUser | n
   } catch {
     return null;
   }
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
-}
-
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
 }
 
 export async function setSession(user: SessionUser): Promise<void> {
@@ -81,11 +77,11 @@ export async function requireSession(role?: Role): Promise<SessionUser> {
 }
 
 export function shipperSession(): SessionUser {
-  const creds = getShipperCredentials();
+  const { nickname, cn } = getShipperIdentity();
   return {
     id: "shipper",
     role: "shipper",
-    username: creds.username,
-    cn: creds.cn,
+    username: nickname,
+    cn,
   };
 }

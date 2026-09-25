@@ -1,15 +1,29 @@
-import { clearSession, getShipperCredentials, hashPassword, setSession, shipperSession, verifyPassword } from "@/lib/auth";
+import { clearSession, isShipperNickname, setSession, shipperSession } from "@/lib/auth";
 import { handleAuthError, jsonError, jsonOk } from "@/lib/api";
 import { readStore, updateStore } from "@/lib/store";
 import { randomUUID } from "crypto";
+
+function normalizeNickname(raw: string | undefined): string {
+  return (raw || "").trim();
+}
+
+function findReceiverByNickname(
+  receivers: { id: string; username: string; cn: string }[],
+  nickname: string,
+) {
+  const n = nickname.toLowerCase();
+  return receivers.find(
+    (r) => r.username.toLowerCase() === n || r.cn.toLowerCase() === n,
+  );
+}
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       mode?: "login" | "register" | "logout";
-      role?: "shipper" | "receiver";
+      nickname?: string;
+      /** @deprecated use nickname */
       username?: string;
-      password?: string;
       cn?: string;
     };
 
@@ -18,62 +32,49 @@ export async function POST(request: Request) {
       return jsonOk({ ok: true });
     }
 
-    const username = (body.username || "").trim();
-    const password = body.password || "";
-    if (!username || !password) {
-      return jsonError("请填写用户名和密码");
+    const nickname = normalizeNickname(body.nickname || body.username || body.cn);
+    if (!nickname) {
+      return jsonError("请填写昵称");
     }
 
     if (body.mode === "register") {
-      const cn = (body.cn || "").trim();
-      if (!cn) return jsonError("请填写中文名");
-      const shipper = getShipperCredentials();
-      if (username.toLowerCase() === shipper.username.toLowerCase()) {
-        return jsonError("该用户名不可用");
+      if (isShipperNickname(nickname)) {
+        return jsonError("该昵称为发货方保留，请直接登录");
       }
       const store = await readStore();
-      if (store.receivers.some((r) => r.username.toLowerCase() === username.toLowerCase())) {
-        return jsonError("用户名已存在");
+      if (findReceiverByNickname(store.receivers, nickname)) {
+        return jsonError("该昵称已存在，请直接登录");
       }
-      const passwordHash = await hashPassword(password);
       const user = {
         id: randomUUID(),
-        username,
-        cn,
-        passwordHash,
+        username: nickname,
+        cn: nickname,
         createdAt: new Date().toISOString(),
       };
       await updateStore((data) => {
         data.receivers.push(user);
       });
-      await setSession({
+      const session = {
         id: user.id,
-        role: "receiver",
+        role: "receiver" as const,
         username: user.username,
         cn: user.cn,
-      });
-      return jsonOk({
-        user: { id: user.id, role: "receiver" as const, username: user.username, cn: user.cn },
-      });
+      };
+      await setSession(session);
+      return jsonOk({ user: session });
     }
 
-    // login
-    if (body.role === "shipper") {
-      const creds = getShipperCredentials();
-      if (username !== creds.username || password !== creds.password) {
-        return jsonError("发货方账号或密码错误", 401);
-      }
+    // login — auto-detect shipper by nickname, else receiver
+    if (isShipperNickname(nickname)) {
       const user = shipperSession();
       await setSession(user);
       return jsonOk({ user });
     }
 
     const store = await readStore();
-    const receiver = store.receivers.find(
-      (r) => r.username.toLowerCase() === username.toLowerCase(),
-    );
-    if (!receiver || !(await verifyPassword(password, receiver.passwordHash))) {
-      return jsonError("用户名或密码错误", 401);
+    const receiver = findReceiverByNickname(store.receivers, nickname);
+    if (!receiver) {
+      return jsonError("昵称不存在，请先注册", 401);
     }
     const user = {
       id: receiver.id,
