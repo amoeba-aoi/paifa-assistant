@@ -54,6 +54,8 @@ Next.js · TypeScript · Tailwind CSS · shadcn/ui · 本地 JSON 或 GitHub Gis
 
 正式仓库：https://github.com/amoeba-aoi/paifa-assistant
 
+公网地址：https://paifa-assistant.vercel.app
+
 本地默认写 `data/store.json`。在 Vercel 等无持久磁盘环境需配置 Gist 存储：
 
 1. 仓库已推送到 GitHub `main`  
