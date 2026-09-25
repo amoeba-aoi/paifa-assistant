@@ -48,4 +48,15 @@ npm run start
 
 ## 技术栈
 
-Next.js · TypeScript · Tailwind CSS · shadcn/ui · 本地 JSON 存储
+Next.js · TypeScript · Tailwind CSS · shadcn/ui · 本地 JSON 或 GitHub Gist 远程存储
+
+## 部署（GitHub + Vercel）
+
+本地默认写 `data/store.json`。在 Vercel 等无持久磁盘环境需配置 Gist 存储：
+
+1. 创建 GitHub 仓库并推送本项目  
+2. 新建 Gist，文件名 `store.json`，内容为 `{"receivers":[],"modules":[],"inventory":[],"requests":[]}`  
+3. 在 Vercel 设置环境变量：`SHIPPER_NICKNAME`、`SHIPPER_CN`、`SESSION_SECRET`、`STORE_GIST_ID`、`STORE_GITHUB_TOKEN`（需 gist 权限）  
+4. Import 仓库部署即可  
+
+详见仓库内说明；Cloud Agent 侧手记见 Context `internal/deploy-handoff.md`。
