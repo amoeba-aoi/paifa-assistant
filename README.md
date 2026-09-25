@@ -52,11 +52,13 @@ Next.js · TypeScript · Tailwind CSS · shadcn/ui · 本地 JSON 或 GitHub Gis
 
 ## 部署（GitHub + Vercel）
 
+正式仓库：https://github.com/amoeba-aoi/paifa-assistant
+
 本地默认写 `data/store.json`。在 Vercel 等无持久磁盘环境需配置 Gist 存储：
 
-1. 创建 GitHub 仓库并推送本项目  
-2. 新建 Gist，文件名 `store.json`，内容为 `{"receivers":[],"modules":[],"inventory":[],"requests":[]}`  
+1. 仓库已推送到 GitHub `main`  
+2. Gist 文件名须为 `store.json`（生产已创建 id 见部署手记）  
 3. 在 Vercel 设置环境变量：`SHIPPER_NICKNAME`、`SHIPPER_CN`、`SESSION_SECRET`、`STORE_GIST_ID`、`STORE_GITHUB_TOKEN`（需 gist 权限）  
-4. Import 仓库部署即可  
+4. Import 仓库部署，或 claim 临时部署以保留公网地址  
 
-详见仓库内说明；Cloud Agent 侧手记见 Context `internal/deploy-handoff.md`。
+详见 Context `internal/deploy-handoff.md`。
