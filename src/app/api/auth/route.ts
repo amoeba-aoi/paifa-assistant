@@ -17,6 +17,24 @@ function findReceiverByNickname(
   );
 }
 
+async function createReceiver(nickname: string) {
+  const user = {
+    id: randomUUID(),
+    username: nickname,
+    cn: nickname,
+    createdAt: new Date().toISOString(),
+  };
+  await updateStore((data) => {
+    data.receivers.push(user);
+  });
+  return {
+    id: user.id,
+    role: "receiver" as const,
+    username: user.username,
+    cn: user.cn,
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
@@ -37,53 +55,27 @@ export async function POST(request: Request) {
       return jsonError("请填写昵称");
     }
 
-    if (body.mode === "register") {
-      if (isShipperNickname(nickname)) {
-        return jsonError("该昵称为发货方保留，请直接登录");
-      }
-      const store = await readStore();
-      if (findReceiverByNickname(store.receivers, nickname)) {
-        return jsonError("该昵称已存在，请直接登录");
-      }
-      const user = {
-        id: randomUUID(),
-        username: nickname,
-        cn: nickname,
-        createdAt: new Date().toISOString(),
-      };
-      await updateStore((data) => {
-        data.receivers.push(user);
-      });
-      const session = {
-        id: user.id,
-        role: "receiver" as const,
-        username: user.username,
-        cn: user.cn,
-      };
-      await setSession(session);
-      return jsonOk({ user: session });
-    }
-
-    // login — auto-detect shipper by nickname, else receiver
+    // Shipper known nickname → shipper session
     if (isShipperNickname(nickname)) {
       const user = shipperSession();
       await setSession(user);
       return jsonOk({ user });
     }
 
+    // Existing receiver → log in; unknown nickname → auto-register then log in
     const store = await readStore();
-    const receiver = findReceiverByNickname(store.receivers, nickname);
-    if (!receiver) {
-      return jsonError("昵称不存在，请先注册", 401);
-    }
-    const user = {
-      id: receiver.id,
-      role: "receiver" as const,
-      username: receiver.username,
-      cn: receiver.cn,
-    };
+    const existing = findReceiverByNickname(store.receivers, nickname);
+    const user = existing
+      ? {
+          id: existing.id,
+          role: "receiver" as const,
+          username: existing.username,
+          cn: existing.cn,
+        }
+      : await createReceiver(nickname);
+
     await setSession(user);
-    return jsonOk({ user });
+    return jsonOk({ user, created: !existing });
   } catch (err) {
     return handleAuthError(err);
   }

@@ -18,15 +18,7 @@ export default function HomePage() {
           </p>
           <div className="rise-in-delay mt-8 flex flex-wrap gap-3">
             <Button size="lg" className="min-w-28" render={<Link href="/login" />}>
-              登录
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="min-w-28"
-              render={<Link href="/register" />}
-            >
-              收货方注册
+              输入昵称进入
             </Button>
           </div>
         </div>
@@ -43,7 +35,7 @@ export default function HomePage() {
             <p className="text-xs font-medium tracking-wide text-sea uppercase">收货方</p>
             <p className="mt-2 font-display text-xl font-semibold text-ink">登记排发需求</p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              注册账号后提交谷子名、数量与排发顺序；可查看待排发与已清货状态。
+              输入昵称即可进入（新昵称自动注册），提交谷子名、数量与排发顺序；可查看待排发与已清货。
             </p>
           </section>
         </div>

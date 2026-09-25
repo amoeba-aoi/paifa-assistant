@@ -21,11 +21,17 @@ export default function LoginPage() {
     setBusy(true);
     setError(null);
     try {
-      const data = await api<{ user: { role: string } }>("/api/auth", {
+      const data = await api<{ user: { role: string }; created?: boolean }>("/api/auth", {
         method: "POST",
         body: JSON.stringify({ mode: "login", nickname }),
       });
-      toast.success("登录成功");
+      toast.success(
+        data.user.role === "shipper"
+          ? "登录成功"
+          : data.created
+            ? "已用该昵称注册并登录"
+            : "登录成功",
+      );
       router.replace(data.user.role === "shipper" ? "/shipper" : "/receiver");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "登录失败");
@@ -41,9 +47,9 @@ export default function LoginPage() {
           排发助手
         </Link>
         <p className="mt-2 text-sm text-muted-foreground">
-          输入昵称即可登录。发货方使用预设昵称（默认{" "}
+          输入昵称即可进入。发货方用{" "}
           <span className="font-medium text-foreground">shipper</span>
-          ），收货方使用自己注册的昵称。
+          ；其他昵称若尚未使用，将自动注册为收货方。
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
@@ -61,16 +67,9 @@ export default function LoginPage() {
             />
           </div>
           <Button type="submit" className="w-full" disabled={busy}>
-            {busy ? "登录中…" : "登录"}
+            {busy ? "进入中…" : "进入"}
           </Button>
         </form>
-
-        <p className="mt-5 text-center text-sm text-muted-foreground">
-          还没有收货方昵称？{" "}
-          <Link href="/register" className="font-medium text-sea hover:underline">
-            去注册
-          </Link>
-        </p>
       </div>
     </main>
   );
