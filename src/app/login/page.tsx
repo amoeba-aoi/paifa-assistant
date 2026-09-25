@@ -6,7 +6,7 @@ import { FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/client-api";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, isImeComposing } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorBanner } from "@/components/app-shell";
 
@@ -16,14 +16,24 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // Guard against Enter confirming IME candidates
+    const ne = e.nativeEvent as unknown as { submitter?: HTMLElement; isComposing?: boolean };
+    if (ne.isComposing) return;
+
+    const name = nickname.trim();
+    if (!name) {
+      setError("请填写昵称");
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {
       const data = await api<{ user: { role: string }; created?: boolean }>("/api/auth", {
         method: "POST",
-        body: JSON.stringify({ mode: "login", nickname }),
+        body: JSON.stringify({ mode: "login", nickname: name }),
       });
       toast.success(
         data.user.role === "shipper"
@@ -47,21 +57,31 @@ export default function LoginPage() {
           排发助手
         </Link>
         <p className="mt-2 text-sm text-muted-foreground">
-          输入昵称即可进入。发货方用{" "}
+          输入昵称即可进入，支持中文。发货方用{" "}
           <span className="font-medium text-foreground">shipper</span>
-          ；其他昵称若尚未使用，将自动注册为收货方。
+          {" "}或「发货方」；其他昵称若尚未使用，将自动注册为收货方。
         </p>
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form
+          onSubmit={onSubmit}
+          className="mt-6 space-y-4"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && isImeComposing(event)) {
+              event.preventDefault();
+            }
+          }}
+        >
           {error && <ErrorBanner message={error} />}
           <div className="space-y-2">
             <Label htmlFor="nickname">昵称</Label>
             <Input
               id="nickname"
+              name="nickname"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               placeholder="例如：shipper 或 小明"
-              autoComplete="nickname"
+              autoComplete="off"
+              spellCheck={false}
               autoFocus
               required
             />

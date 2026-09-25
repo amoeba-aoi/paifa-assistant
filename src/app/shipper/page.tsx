@@ -190,7 +190,15 @@ export default function ShipperPage() {
                 </select>
               )}
             </div>
-            <form onSubmit={createModule} className="flex w-full flex-col gap-2 sm:flex-row sm:items-end lg:w-auto">
+            <form
+              onSubmit={createModule}
+              className="flex w-full flex-col gap-2 sm:flex-row sm:items-end lg:w-auto"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && ((e.nativeEvent as KeyboardEvent).isComposing || e.keyCode === 229)) {
+                  e.preventDefault();
+                }
+              }}
+            >
               <div className="space-y-2 sm:min-w-56">
                 <Label htmlFor="moduleName">新建模块</Label>
                 <Input
@@ -224,6 +232,11 @@ export default function ShipperPage() {
               <form
                 onSubmit={addInventory}
                 className="grid gap-3 rounded-2xl border border-border bg-surface p-4 sm:grid-cols-[1fr_120px_auto] sm:items-end"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && ((e.nativeEvent as KeyboardEvent).isComposing || e.keyCode === 229)) {
+                    e.preventDefault();
+                  }
+                }}
               >
                 <div className="space-y-2">
                   <Label htmlFor="itemName">谷子名</Label>

@@ -4,7 +4,7 @@ import { readStore, updateStore } from "@/lib/store";
 import { randomUUID } from "crypto";
 
 function normalizeNickname(raw: string | undefined): string {
-  return (raw || "").trim();
+  return (raw || "").trim().normalize("NFC");
 }
 
 function findReceiverByNickname(
@@ -13,7 +13,9 @@ function findReceiverByNickname(
 ) {
   const n = nickname.toLowerCase();
   return receivers.find(
-    (r) => r.username.toLowerCase() === n || r.cn.toLowerCase() === n,
+    (r) =>
+      r.username.normalize("NFC").toLowerCase() === n ||
+      r.cn.normalize("NFC").toLowerCase() === n,
   );
 }
 

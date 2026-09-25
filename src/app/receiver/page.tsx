@@ -128,7 +128,15 @@ export default function ReceiverPage() {
               />
             </div>
           ) : (
-            <form onSubmit={submitRequest} className="mt-4 grid gap-3 sm:grid-cols-2">
+            <form
+              onSubmit={submitRequest}
+              className="mt-4 grid gap-3 sm:grid-cols-2"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && ((e.nativeEvent as KeyboardEvent).isComposing || e.keyCode === 229)) {
+                  e.preventDefault();
+                }
+              }}
+            >
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="moduleId">哪一期谷子</Label>
                 <select

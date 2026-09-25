@@ -13,8 +13,11 @@ export function getShipperIdentity() {
 
 export function isShipperNickname(nickname: string): boolean {
   const { nickname: shipperNick, cn } = getShipperIdentity();
-  const n = nickname.trim().toLowerCase();
-  return n === shipperNick.toLowerCase() || n === cn.toLowerCase();
+  const n = nickname.trim().normalize("NFC").toLowerCase();
+  return (
+    n === shipperNick.trim().normalize("NFC").toLowerCase() ||
+    n === cn.trim().normalize("NFC").toLowerCase()
+  );
 }
 
 function sessionSecret() {
